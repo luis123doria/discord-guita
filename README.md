@@ -390,4 +390,71 @@ With all of that set up, now it's time for you to save the parsed Wordle results
 ## Deploying
 Now that you have everything working you'll realize the bot only runs when you start it up on your machine. What if you want it to run all the time? You need to deploy it somewhere that can host the bot for you. You have *a lot* of options (both free and paid) when it comes to hosting so if you already have a provider you like to use then go with that.
 
-- TODO
+One thing we need to consider at this point is that we've been using a database that's a local file within the source code of the project. We could continue to use this but it will create some challenges and potential issues with keeping it up to date with the latest data whenever you deploy an updated version of your bot. We need a more production ready solution to host our database and this is where Turso can help.
+
+### Production Database
+- Go to [Turso](https://turso.tech/) in your browser
+- Sign up for a free account (you can use GitHub)
+- Create a group in a region your prefer with Fly.io
+- Create a database in that group
+- Once the database has been created look for the "Edit Data" button. Next to this you'll see three dots which is a menu button. Click on that and select "Create Token"
+- Choose an expiration that best fits your needs
+- For "Access" select "Read & Write"
+- Then click "Create Token"
+- Copy the token value and the URL and save them in a safe place (you'll need these later)
+- Go back to your code in VS Code
+
+### Connect to Production Database
+- In your editor go to the `drizzle.config.ts` file
+- Change the value for `dialect` to `turso`
+- For the `dbCredentials` object, after the `url` property add a comma and a new property called `authToken`
+- Set the value for `authToken` to `process.env.TURSO_TOKEN!`
+- Open the `src/db/index.ts` file
+- Where you see `const client = createClient({ ...` (should be line 7) modify this to include another field in the object passed into the `createClient` function by adding `authToken: process.env.TURSO_TOKEN!`.
+  - It should look like this:
+    ```ts
+    const client = createClient({
+      url: process.env.DB_FILE_NAME!,
+      authToken: process.env.TURSO_TOKEN!
+    });
+    ```
+- Then open your `.env` file and add `TURSO_TOKEN=<your-token-value` replacing the value with your token you copied from Turso earlier
+- Also in your `.env` file, change the value of `DB_FILE_NAME` to the URL you copied from Turso earlier
+- Open up your terminal and run `bunx drizzle-kit push` to push the database schema into the Turso hosted database
+- Now go back to your browser and see if the schema changes were applied to the Turso hosted instance of the database
+  - Click on the "Edit Data" button in Turso and choose "Drizzle Studio"
+  - Confirm the schema changes were applied to this database (you should see the "players", "scores" and "wordles" tables)
+- Go back to your editor, VS Code, and open the terminal
+- Run `bun run src/index.ts`
+- Head over to your Discord server, paste in a Wordle result in the channel you have the bot listening to and send the message
+- Go back to the Turso website you had open earlier with Drizzle Studio and refresh to see if the data was successfully captured by the bot and stored in the database
+
+### Push Changes to GitHub
+- Open up your terminal and run `git add .` to add all changes to be staged for committing
+- Run `git commit -m "initial solution"
+- Run `git push`
+
+### Hosting with Render
+- Go to [render.com](https://render.com) in your browser
+- Sign up for an account with Render (preferrably use the GitHub integration to sign up)
+- Once signed up you should be viewing the "Projects" page in your "Workspace". There should be a button towards the top-right of the page titled "Add New". Click on that and select "Background Worker"
+- You'll be brought to a new page. With "Git Provider" selected you should see your repository for the Discord bot shown. If you don't click on the button titled "Credentials", click on your GitHub account username, and then click "Configure in GitHub"
+  - This will open up a new window to go through the auth flow with GitHub with a step allowing you to add specific repositories to have access to on Render.com
+- Select your repository under the "Git Provider" view and then the "Connect" button towards the bottom right should be enabled. Click on "Connect" the connect button.
+- This will bring you to a new page titled "You are deploying a Background Worker". Here you'll need to change things to fit your Discord Bot project needs.
+  - For "Language" choose "Node.js"
+  - Select a "Region" that best fits your needs
+  - For "Build Command" set this to "bun install"
+  - For "Start Command" set this to "bun run src/index.ts"
+- After the main configuration is set scroll down to the "Environment Variables" section
+- Click on the "Add from .env" button. This will open a pop up titled "Add from .env" with and open text input
+- Go back to your `.env` file in your editor (VS Code) and copy the entire contents of the file
+- Go back to your browser on Render's site and paste the contents of your `.env` file in the open test input and click "Add variables"
+- Click the "Deploy Background Worker" button
+- Render will begin the process to set up and deploy your Discord bot. You'll be brought to a page showing all the logs of the progress while that's happening
+- When Render is done deploying it will show a status of "Live" in green text towards the top of the page. You will also see the log message from your bot "Logged in as Wordle Bot#<your-bot-number>"
+
+### Verifying the Deployment
+- Go to your Discord server and send a Wordle result in the text channel your bot is monitoring
+- Confirm it captured the results in the database hosted on Turso via the Drizzle Studio you should still have open in your browser from earlier
+- You did it! You've successfully built and deploy a Discord Wordle Bot. Enjoy playing Wordle and competing with other players in your community 👍
