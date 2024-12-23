@@ -310,13 +310,13 @@ With all of that set up, now it's time for you to save the parsed Wordle results
     return scoresForCurrentGame;
   }
   ```
-  - Go to the `processCurrentResults` function and update the `currentResults` parameter type to `SelectScoreWithRelations[]`. Example: `async function processCurrentResults(currentResults: SelectScoreWithRelations[], message: any)`
-  - Do the same for the `winners` variable inside the `processCurrentResults` function so that it's type is `SelectScoreWithRelations[]`. Example: `const winners: SelectScoreWithRelations[] = await determineWinners(currentResults);`
-  - Similarly go to the `determineWinners` function and change the `results` parameter type to `SelectScoreWithRelations[]` as well as the return type within the `Promise<SelectScoreWithRelations[]>`. Example: `async function determineWinners(results: SelectScoreWithRelations[]): Promise<SelectScoreWithRelations[]>`
-  - For the last update to the `index.ts` file go to the `informLatestResults` function and update the `winners` parameter type to `SelectScoreWithRelations[]`. Example: `async function informLatestResults(winners: SelectScoreWithRelations[], message: any)`
-  - Save your changes
-  - Next open the `index.ts` file in the `db` folder.
-  - Replace the entire contents of the file with the following code:
+- Go to the `processCurrentResults` function and update the `currentResults` parameter type to `SelectScoreWithRelations[]`. Example: `async function processCurrentResults(currentResults: SelectScoreWithRelations[], message: any)`
+- Do the same for the `winners` variable inside the `processCurrentResults` function so that it's type is `SelectScoreWithRelations[]`. Example: `const winners: SelectScoreWithRelations[] = await determineWinners(currentResults);`
+- Similarly go to the `determineWinners` function and change the `results` parameter type to `SelectScoreWithRelations[]` as well as the return type within the `Promise<SelectScoreWithRelations[]>`. Example: `async function determineWinners(results: SelectScoreWithRelations[]): Promise<SelectScoreWithRelations[]>`
+- For the last update to the `index.ts` file go to the `informLatestResults` function and update the `winners` parameter type to `SelectScoreWithRelations[]`. Example: `async function informLatestResults(winners: SelectScoreWithRelations[], message: any)`
+- Save your changes
+- Next open the `index.ts` file in the `db` folder.
+- Replace the entire contents of the file with the following code:
     ```ts
     import { drizzle } from 'drizzle-orm/libsql';
     import { createClient } from "@libsql/client";
@@ -380,12 +380,12 @@ With all of that set up, now it's time for you to save the parsed Wordle results
       }
     }
     ```
-    - Open up your terminal and run `bunx drizzle-kit studio`
-    - Open your browser to [https://local.drizzle.studio](https://local.drizzle.studio) to see a UI for the data in your database.
-    - Open up a new terminal window and run `bun run src/index.ts`
-    - Go to your Discord server where you added your bot and share a wordle result as a message. You can use the example one from the "Sharing Wordles" section earlier.
-    - Go back to your browser with the UI for the database and refresh the page to see if the Wordle result you shared in Discord was saved successfully.
-    - Congrats you've completed this section and have a persistent Discord Wordle Bot working!
+- Open up your terminal and run `bunx drizzle-kit studio`
+- Open your browser to [https://local.drizzle.studio](https://local.drizzle.studio) to see a UI for the data in your database.
+- Open up a new terminal window and run `bun run src/index.ts`
+- Go to your Discord server where you added your bot and share a wordle result as a message. You can use the example one from the "Sharing Wordles" section earlier.
+- Go back to your browser with the UI for the database and refresh the page to see if the Wordle result you shared in Discord was saved successfully.
+- Congrats you've completed this section and have a persistent Discord Wordle Bot working!
 
 ## Deploying
 Now that you have everything working you'll realize the bot only runs when you start it up on your machine. What if you want it to run all the time? You need to deploy it somewhere that can host the bot for you. You have *a lot* of options (both free and paid) when it comes to hosting so if you already have a provider you like to use then go with that.
