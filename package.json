@@ -6,6 +6,12 @@
     "@types/bun": "latest",
     "drizzle-kit": "^0.29.1"
   },
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
@@ -14,7 +20,6 @@
     "concurrently": "^9.1.2",
     "discord.js": "^14.17.3",
     "dotenv": "^16.4.7",
-    "drizzle-orm": "^0.37.0",
     "express": "^4.21.2",
     "firebase": "^11.2.0",
     "firebase-admin": "^13.0.2",
