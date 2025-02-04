@@ -13,6 +13,8 @@
     "verbatimModuleSyntax": true,
     "noEmit": true,
 
+    // holaaa
+
     // Best practices
     "strict": true,
     "skipLibCheck": true,
