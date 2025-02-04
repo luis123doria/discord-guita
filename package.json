@@ -1,14 +1,13 @@
 {
-  "name": "discord-wordle-bot-template",
-  "module": "index.ts",
+  "name": "guita-bot",
+  "module": "bot.ts",
   "type": "module",
-  "devDependencies": {
-    "@types/bun": "latest",
-    "drizzle-kit": "^0.29.1"
-  },
+  "version": "1.0.0",
+  "description": "A discord bot for the Guita server",
+  "main": "bot.ts",
   "scripts": {
-    "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts",
+    "start": "bun run src/bot.ts",
+    "dev": "bun run src/bot.ts",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -26,6 +25,7 @@
     "nodemon": "^3.1.9"
   },
   "devDependencies": {
+    "@types/bun": "latest",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.0"
   }
