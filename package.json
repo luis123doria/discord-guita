@@ -1,16 +1,5 @@
 {
-  "name": "discord-bot",
-  "version": "1.0.0",
-  "description": "Discord bot para trackear guita",
-  "main": "index.ts",
-  "scripts": {
-    "start": "bun run build/index.ts",
-    "dev": "bun run src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
-    "start:dev": "concurrently \"npm run dev\" \"npm run start\"",
-    "deploy:commands": "tsc && bun run src/deploy-commands.js"
-  },
+  "name": "discord-wordle-bot-template",
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
@@ -21,14 +10,19 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@discordjs/rest": "^2.4.2",
     "@libsql/client": "^0.14.0",
+<<<<<<< HEAD
     "concurrently": "^9.1.2",
     "discord.js": "^14.17.3",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.37.0",
     "express": "^4.21.2",
     "firebase": "^11.2.0",
+    "firebase-admin": "^13.0.2",
     "nodemon": "^3.1.9"
+=======
+    "discord.js": "^14.16.3",
+    "drizzle-orm": "^0.37.0"
+>>>>>>> parent of 6189781 (Primer commit)
   }
 }

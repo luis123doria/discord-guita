@@ -1,8 +1,9 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import type { Client, CommandInteraction, TextChannel } from "discord.js";
+import { db } from '../firebase';
 
 // Object to store points for each user
-export const userPoints: { [key: string]: number } = {};
+// export const userPoints: { [key: string]: number } = {};
 
 export const data = new SlashCommandBuilder()
     .setName('puntos')
@@ -56,15 +57,20 @@ export async function execute(interaction: CommandInteraction, client: Client) {
     }
 
     // Initialize user points if not already set
-    if (!userPoints[userId]) {
-        userPoints[userId] = 0;
-    }
+    const userRef = db.collection('user_points').doc(userId);
+    const userDoc = await userRef.get();
+
+    let newPoints = userDoc.exists ? (userDoc.data()?.points ?? 0) : 0;
+
+    // if (!userPoints[userId]) {
+    //    userPoints[userId] = 0;
+    //}
 
     // Add or subtract points based on the action
     if (action === 'add') {
-        userPoints[userId] += points;
+        newPoints += points;
     } else if (action === 'subtract') {
-        userPoints[userId] -= points;
+        newPoints -= points;
     } else {
         return interaction.reply({
             content: 'Acción no válida. Debes elegir entre "Añadir" o "Restar".',
@@ -72,10 +78,12 @@ export async function execute(interaction: CommandInteraction, client: Client) {
         });
     }
 
+    await userRef.set({ points: newPoints }, { merge: true });
+
     // Debug: Log the updated userPoints object
-    console.log('Updated userPoints:', userPoints);
+    // console.log('Updated userPoints:', userPoints);
 
     return interaction.reply({
-        content: `Se ${action === 'add' ? 'añadieron' : 'restaron'} ${points} puntos al usuario <@${userId}>. Total de puntos: ${userPoints[userId]}.`
+        content: `Se ${action === 'add' ? 'añadieron' : 'restaron'} ${points} puntos al usuario <@${userId}>. Total de puntos: ${newPoints}.`
     });
 }
