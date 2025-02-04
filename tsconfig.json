@@ -7,6 +7,12 @@
     "moduleDetection": "force",
     "jsx": "react-jsx",
     "allowJs": true,
+    "outDir": "build",
+    "rootDir": "src",
+
+    // "token": "MTMzNjEyNjYzNjM2NTcxMzQ5OA.GsVkqC.RPBv-mBGvn8ghhMcw_srGogvTL6FpzkQIYEZwc",
+    // "clientId": "1336126636365713498",
+    // "guildId": "1326025843604062218",
 
     // Bundler mode
     "moduleResolution": "bundler",
