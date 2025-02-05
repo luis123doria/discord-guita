@@ -9,6 +9,7 @@
     "start": "bun run src/bot.ts",
     "dev": "bun run src/bot.ts",
     "build": "tsc",
+    "deploy:commands": "bun run src/deploy-commands.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "peerDependencies": {
