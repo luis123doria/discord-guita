@@ -1,10 +1,11 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { CommandInteraction, TextChannel, EmbedBuilder } from 'discord.js';
 import { db } from '../firebase';
+import schedule from 'node-schedule';
 
 export const data = new SlashCommandBuilder()
   .setName('tarea')
-  .setDescription('Crea una nueva tarea con fecha límite y duración.')
+  .setDescription('Crea una nueva tarea con fecha límite.')
   .addStringOption(option =>
     option.setName('name')
       .setDescription('Nombre de la tarea (máx 20 carácteres)')
@@ -15,32 +16,26 @@ export const data = new SlashCommandBuilder()
       .setDescription('La fecha límite de la tarea (formato: DD-MM-YYYY)')
       .setRequired(true)
       .setMaxLength(10))
-  .addStringOption(option =>
-    option.setName('duration')
-      .setDescription('Duración de la tarea (formato HH:MM)')
-      .setRequired(true)
-      .setMaxLength(5))
-    .addUserOption(option =>
-    option.setName('user1')
-        .setDescription('1er usuario asignado a la tarea')
-        .setRequired(true))
-    .addUserOption(option =>
-    option.setName('user2')
-        .setDescription('2do usuario asignado a la tarea')
-        .setRequired(false))
-    .addUserOption(option =>
-    option.setName('user3')
-        .setDescription('3er usuario asignado a la tarea')
-        .setRequired(false))
-    .addUserOption(option =>
-    option.setName('user4')
-        .setDescription('4to usuario asignado a la tarea')
-        .setRequired(false));
+  .addUserOption(option =>
+  option.setName('user1')
+      .setDescription('1er usuario asignado a la tarea')
+      .setRequired(true))
+  .addUserOption(option =>
+  option.setName('user2')
+      .setDescription('2do usuario asignado a la tarea')
+      .setRequired(false))
+  .addUserOption(option =>
+  option.setName('user3')
+      .setDescription('3er usuario asignado a la tarea')
+      .setRequired(false))
+  .addUserOption(option =>
+  option.setName('user4')
+      .setDescription('4to usuario asignado a la tarea')
+      .setRequired(false));
 
 export async function execute(interaction: CommandInteraction) {
   const taskName = interaction.options.get('name')?.value as string;
   const deadline = interaction.options.get('deadline')?.value as string;
-  const duration = interaction.options.get('duration')?.value as string;
   const user = interaction.user;
 
 
@@ -62,8 +57,8 @@ export async function execute(interaction: CommandInteraction) {
     .addFields(
         { name: '✏️ Nombre', value: taskName, inline: true },
         { name: '📅 Fecha Límite', value: deadline, inline: true },
-        { name: '⏲️ Duración', value: duration, inline: true },
-        { name: '👥 Asignada a:', value: usersInvolved.map(u => `• ${u.tag}`).join('\n'), inline: true }
+        { name: '👥 Asignada a:', value: usersInvolved.map(u => `• ${u.tag}`).join('\n'), inline: true },
+        { name: '📌 Estado', value: 'Doing', inline: true } // Add status field with default value
       )
     .setColor('#00FF00')
     .setTimestamp();
@@ -82,17 +77,25 @@ export async function execute(interaction: CommandInteraction) {
     await db.collection('tasks').add({
       name: taskName,
       deadline: deadline,
-      duration: duration,
       createdBy: user.tag,
       assignedTo: usersInvolved.map(u => u.tag),
+      status: 'Doing',
       threadId: thread.id,
       createdAt: new Date()
     });
 
     // Send a message in the new thread mentioning all users involved
-    await thread.send(`Tarea asignada a: ${usersInvolved.map(u => `<@${u.id}>`).join(', ')}`);
+    await thread.send(`🗒️ **Tarea asignada a:** ${usersInvolved.map(u => `<@${u.id}>`).join(', ')}.\n**¡Buena suerte!**`);
 
-    await interaction.followUp(`Hilo de seguimiento creado: <#${thread.id}>`);
+    // Schedule a message to be sent 1 hour and 25 minutes before the deadline
+    const deadlineDate = new Date(deadline.split('-').reverse().join('-') + 'T00:00:00');
+    const reminderDate = new Date(deadlineDate.getTime() - (2 * 60 * 60 * 1000 + 0 * 60 * 1000)); // 2 hour and 0 minutes before midnight
+
+    schedule.scheduleJob(reminderDate, async () => {
+      await thread.send(`🚨 **Atención** ${usersInvolved.map(u => `<@${u.id}>`).join(', ')} 🚨\nLa fecha límite para la tarea **${taskName}** está a punto de completarse. **¡Dense prisa!**`);
+    });
+
+    await interaction.followUp(`🧵 **Hilo de seguimiento creado:** <#${thread.id}>`);
   } catch (error) {
     console.error(error);
     await interaction.reply({ content: 'Ocurrió un error al crear la tarea.', ephemeral: true });

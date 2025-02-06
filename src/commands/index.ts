@@ -5,3 +5,5 @@ export * as rank from "./rank";
 export * as comandos from "./comandos";
 export * as tarea from "./tarea";
 export * as lista from "./lista";
+export * as todo from "./todo";
+export * as todolist from "./todolist";
