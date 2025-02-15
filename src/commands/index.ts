@@ -7,3 +7,5 @@ export * as tarea from "./tarea";
 export * as lista from "./lista";
 export * as todo from "./todo";
 export * as todolist from "./todolist";
+export * as shop from "./shop";
+export * as createItem from "./createItem";

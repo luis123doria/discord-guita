@@ -8,9 +8,9 @@ export const data = new SlashCommandBuilder()
   .setDescription('Crea una nueva tarea con fecha límite.')
   .addStringOption(option =>
     option.setName('name')
-      .setDescription('Nombre de la tarea (máx 20 carácteres)')
+      .setDescription('Nombre de la tarea (máx 50 carácteres)')
       .setRequired(true)
-      .setMaxLength(20))
+      .setMaxLength(50))
   .addStringOption(option =>
     option.setName('deadline')
       .setDescription('La fecha límite de la tarea (formato: DD-MM-YYYY)')

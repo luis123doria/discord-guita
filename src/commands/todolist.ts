@@ -12,7 +12,7 @@ export async function execute(interaction: CommandInteraction, client: Client) {
     const user = interaction.user;
     const todosSnapshot = await db.collection('todo').where('createdBy', '==', user.tag).get();
     if (todosSnapshot.empty) {
-      await interaction.reply({ content: 'No has creado ningún to-do.', ephemeral: true });
+      await interaction.reply({ content: 'No has creado ningún to-do.'});
       return;
     }
 
