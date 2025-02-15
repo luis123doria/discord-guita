@@ -67,7 +67,7 @@ export async function execute(interaction: CommandInteraction) {
     const message = await interaction.reply({ embeds: [embed], fetchReply: true });
 
     const thread = await interaction.channel.threads.create({
-      name: `task.${taskName}`,
+      name: `${taskName}`,
       autoArchiveDuration: 1440, // Auto-archive after 60 minutes of inactivity
       startMessage: message.id,
       reason: 'New task thread created by bot command'
