@@ -44,7 +44,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: CommandInteraction, client: Client) {
   try {
-    await interaction.reply({ content: 'Actualizando información desde Google Sheets...', flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     // Extraer datos de la hoja BENEFICIOS
     const beneficiosData = await fetchSheetData('BENEFICIOS', 'A1:D6');
