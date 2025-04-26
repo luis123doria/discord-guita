@@ -111,7 +111,7 @@ export async function execute(interaction: CommandInteraction, client: Client) {
         let streakText = '';
 
         // Reiniciar los contadores de racha si se cambia de rango
-        if (horas > 0 && horas < 6) {
+        if (horas > 0 && horas < 8) {
             if (streak !== 'NE') {
                 currentE = 0;
                 currentSE = 0;
@@ -126,7 +126,7 @@ export async function execute(interaction: CommandInteraction, client: Client) {
             streak = 'NE';
             streakText = 'No Efectiva';
             streakCount += 1;
-        } else if (horas >= 6 && horas <= 10) {
+        } else if (horas >= 8 && horas <= 10) {
             if (streak !== 'E') {
                 currentNE = 0;
                 currentSE = 0;
@@ -220,7 +220,7 @@ export async function execute(interaction: CommandInteraction, client: Client) {
         let streakText = '';
 
         // Reiniciar los contadores de racha si se cambia de rango
-        if (horas > 0 && horas < 6) {
+        if (horas > 0 && horas < 8) {
             if (streak !== 'NE') {
                 currentE = 0;
                 currentSE = 0;
@@ -235,7 +235,7 @@ export async function execute(interaction: CommandInteraction, client: Client) {
             streak = 'NE';
             streakText = 'No Efectiva';
             streakCount += 1;
-        } else if (horas >= 6 && horas <= 10) {
+        } else if (horas >= 8 && horas <= 10) {
             if (streak !== 'E') {
                 currentNE = 0;
                 currentSE = 0;

@@ -16,10 +16,19 @@ export const data = new SlashCommandBuilder()
       .setDescription('La fecha límite de la tarea (formato: DD-MM-YYYY)')
       .setRequired(true)
       .setMaxLength(10))
-  .addStringOption(option =>
-    option.setName('puntos')
-      .setDescription('Cantidad de puntos asignados a la tarea')
+  .addIntegerOption(option =>
+    option.setName('horas')
+      .setDescription('Cantidad de horas estimadas para completar la tarea')
       .setRequired(true))
+  .addStringOption(option =>
+    option.setName('prioridad')
+      .setDescription('Nivel de impacto de la tarea')
+      .setRequired(true)
+      .addChoices(
+        { name: 'Alto', value: 'HIGH' },
+        { name: 'Medio', value: 'MEDIUM' },
+        { name: 'Bajo', value: 'LOW' }
+      ))
   .addUserOption(option =>
   option.setName('user1')
       .setDescription('1er usuario asignado a la tarea')
@@ -41,7 +50,8 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: CommandInteraction) {
   const taskName = interaction.options.get('name')?.value as string;
   const deadline = interaction.options.get('deadline')?.value as string;
-  const puntos = parseInt(interaction.options.get('puntos')?.value as string, 10);
+  const horas = interaction.options.get('horas')?.value as number;
+  const prioridad = interaction.options.get('prioridad')?.value as string;
   const user = interaction.user;
 
   const usersInvolved: { id: string; tag: string }[] = [];
@@ -62,11 +72,12 @@ export async function execute(interaction: CommandInteraction) {
     .addFields(
         { name: '✏️ Nombre', value: taskName, inline: true },
         { name: '📅 Fecha Límite', value: deadline, inline: true },
+        { name: '⏳ Horas Estimadas', value: `${horas} horas`, inline: true },
+        { name: '⚡ Prioridad', value: prioridad, inline: true },
         { name: '👥 Asignada a:', value: usersInvolved.map(u => `• ${u.tag}`).join('\n'), inline: true },
-        { name: '💰 Puntos', value: interaction.options.get('puntos')?.value as string, inline: true },
         { name: '📌 Estado', value: 'Doing', inline: true } // Add status field with default value
       )
-    .setColor('#00FF00')
+      .setColor(prioridad === 'HIGH' ? '#FF0000' : prioridad === 'MEDIUM' ? '#FFA500' : '#00FF00') // Cambiar color según prioridad
     .setTimestamp();
 
   try {
@@ -86,7 +97,8 @@ export async function execute(interaction: CommandInteraction) {
     await taskRef.set({
       name: taskName,
       deadline: deadline,
-      puntos: puntos,
+      horas: horas,
+      prioridad: prioridad,
       createdBy: user.tag,
       assignedTo: usersInvolved,
       status: 'Doing',
@@ -166,8 +178,9 @@ export async function execute(interaction: CommandInteraction) {
           .addFields(
             { name: '✏️ Nombre', value: taskData.name, inline: true },
             { name: '📅 Nueva Fecha Límite', value: newDeadlineString, inline: true },
+            { name: '⏳ Horas Estimadas', value: `${horas} horas`, inline: true },
+            { name: '⚡ Prioridad', value: prioridad, inline: true },
             { name: '👥 Asignada a:', value: usersInvolved.map(u => `• ${u.tag}`).join('\n'), inline: true },
-            { name: '💰 Puntos Actualizados', value: newPuntos.toString(), inline: true },
             { name: '📌 Estado', value: 'Doing', inline: true }
           )
           .setColor('#FFA500') // Cambiar color para indicar actualización

@@ -145,7 +145,7 @@ export async function execute(interaction: CommandInteraction) {
             selectedTask.status = 'Finished';
 
             // Asignar puntos a los usuarios involucrados
-            const { assignedTo, puntos } = selectedTask;
+            const { assignedTo, horas, prioridad } = selectedTask;
           
             // Definir los ajustes de puntos según los roles
             const roleAdjustments = {
@@ -171,6 +171,18 @@ export async function execute(interaction: CommandInteraction) {
               SMNO: '1364250217645346927',
             };
 
+            // Determinar el valor de prioridad_number según la prioridad
+            const prioridadValues = {
+              LOW: 10,
+              MEDIUM: 20,
+              HIGH: 70,
+            };
+            const prioridadNumber = prioridadValues[prioridad] || 10; // Valor predeterminado: LOW
+
+            // Calcular los puntos base
+            const basePoints = horas * prioridadNumber;
+            const mentions = assignedTo.map(user => `<@${user.id}>`).join(', '); // Generar menciones de los usuarios
+
             for (const user of assignedTo) {
               const userRef = db.collection('horas_guita').doc(user.id);
               const userSnapshot = await userRef.get();
@@ -193,13 +205,12 @@ export async function execute(interaction: CommandInteraction) {
                 }
               }
 
-              const adjustedPoints = Math.round(puntos * (1 + totalAdjustment));
+              const adjustedPoints = Math.round(basePoints * (1 + totalAdjustment));
 
               await userRef.update({ puntos: currentPoints + adjustedPoints });
 
               await interaction.followUp({
-                content: `🎉 **Recibiste **${adjustedPoints} puntos** por completar la tarea **${selectedTask.name}**.\nAjuste aplicado por los roles: ${rolesAfectados.length > 0 ? rolesAfectados.join(', ') : 'No se aplicaron ajustes.'}`,
-                flags: MessageFlags.Ephemeral,
+                content: `🎉Recibiste **${adjustedPoints} puntos** por completar la tarea **${selectedTask.name}**.\n${mentions}\nAjuste aplicado por los roles: ${rolesAfectados.length > 0 ? rolesAfectados.join(', ') : 'No se aplicaron ajustes.'}`,
               });
             }
 
