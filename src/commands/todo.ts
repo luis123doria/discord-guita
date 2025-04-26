@@ -33,7 +33,8 @@ export async function execute(interaction: CommandInteraction) {
         const assignedUsers = task.assignedTo.map(user => `<@${user.id}>`).join(', ') || 'Nadie';
         taskList += `**${start + index + 1}. ${task.name}**\n`;
         taskList += `• **Fecha Límite:** ${task.deadline}\n`;
-        taskList += `• **Puntos:** ${task.puntos}\n`;
+        taskList += `• **Horas Estimadas:** ${task.horas} horas\n`; // Mostrar las horas estimadas
+        taskList += `• **Prioridad:** ${task.prioridad}\n`; // Mostrar la prioridad
         taskList += `• **Asignada a:** ${assignedUsers}\n`;
         taskList += `• **Estado:** ${task.status}\n\n`;
       });
