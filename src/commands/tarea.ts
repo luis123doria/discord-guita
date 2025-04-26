@@ -48,12 +48,27 @@ export const data = new SlashCommandBuilder()
   
 
 export async function execute(interaction: CommandInteraction) {
+  try {
   const taskName = interaction.options.get('name')?.value as string;
   const deadline = interaction.options.get('deadline')?.value as string;
   const horas = interaction.options.get('horas')?.value as number;
   const prioridad = interaction.options.get('prioridad')?.value as string;
   const user = interaction.user;
 
+  // Validar los valores
+  if (!taskName || typeof taskName !== 'string') {
+    throw new Error('El nombre de la tarea es inválido.');
+  }
+  if (!deadline || typeof deadline !== 'string') {
+    throw new Error('La fecha límite es inválida.');
+  }
+  if (!horas || typeof horas !== 'number') {
+    throw new Error('Las horas estimadas son inválidas.');
+  }
+  if (!prioridad || typeof prioridad !== 'string') {
+    throw new Error('La prioridad es inválida.');
+  }
+  
   const usersInvolved: { id: string; tag: string }[] = [];
   for (let i = 1; i <= 5; i++) {
     const userOption = interaction.options.getUser(`user${i}`);
@@ -61,6 +76,14 @@ export async function execute(interaction: CommandInteraction) {
       usersInvolved.push({ id: userOption.id, tag: userOption.tag });
     }
   }
+
+  console.log({
+    taskName,
+    deadline,
+    horas,
+    prioridad,
+    usersInvolved
+  });
 
   if (!interaction.channel || !(interaction.channel instanceof TextChannel)) {
     await interaction.reply({ content: 'Este comando solo se puede usar en canales.', ephemeral: true });
@@ -70,17 +93,17 @@ export async function execute(interaction: CommandInteraction) {
   const embed = new EmbedBuilder()
     .setTitle('📝 Nueva tarea creada')
     .addFields(
-        { name: '✏️ Nombre', value: taskName, inline: true },
-        { name: '📅 Fecha Límite', value: deadline, inline: true },
+        { name: '✏️ Nombre', value: String(taskName), inline: true },
+        { name: '📅 Fecha Límite', value: String(deadline), inline: true },
         { name: '⏳ Horas Estimadas', value: `${horas} horas`, inline: true },
-        { name: '⚡ Prioridad', value: prioridad, inline: true },
+        { name: '⚡ Prioridad', value: String(prioridad), inline: true },
         { name: '👥 Asignada a:', value: usersInvolved.map(u => `• ${u.tag}`).join('\n'), inline: true },
         { name: '📌 Estado', value: 'Doing', inline: true } // Add status field with default value
       )
       .setColor(prioridad === 'HIGH' ? '#FF0000' : prioridad === 'MEDIUM' ? '#FFA500' : '#00FF00') // Cambiar color según prioridad
     .setTimestamp();
 
-  try {
+  
     const message = await interaction.reply({ embeds: [embed], fetchReply: true });
 
     const thread = await interaction.channel.threads.create({
@@ -92,7 +115,15 @@ export async function execute(interaction: CommandInteraction) {
 
     // Define taskRef here to make it accessible in the entire function
     const taskRef = db.collection('tasks').doc();
-
+    console.log("Tarea creada en Firestore", taskRef.id);
+    console.log({
+      taskName,
+      deadline,
+      horas,
+      prioridad,
+      usersInvolved
+    });
+    
     // Store task information in Firestore
     await taskRef.set({
       name: taskName,
