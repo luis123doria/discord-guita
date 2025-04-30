@@ -16,10 +16,12 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@discordjs/builders": "^1.11.1",
+    "@discordjs/rest": "^2.5.0",
     "@libsql/client": "^0.14.0",
     "@types/node-schedule": "^2.1.7",
     "concurrently": "^9.1.2",
-    "discord.js": "^14.17.3",
+    "discord.js": "^14.19.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "firebase": "^11.2.0",

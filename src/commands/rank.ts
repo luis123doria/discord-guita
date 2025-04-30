@@ -13,9 +13,14 @@ export async function execute(interaction: CommandInteraction, client: Client) {
     }
 
     const pointsSnapshot = await db.collection('horas_guita').orderBy('horas', 'desc').get();
-    const pointsArray = pointsSnapshot.docs.map(doc => ({ user_id: doc.id, horas: doc.data().horas, puntos: doc.data().puntos, }));
+    const pointsArray = pointsSnapshot.docs.map(doc => ({ 
+        user_id: doc.id, 
+        horas: doc.data().horas, 
+        puntos: doc.data().puntos, 
+        porcentaje: doc.data().porcentaje
+    }));
 
-    const leaderboardPromises = pointsArray.map(async ({ user_id, horas, puntos }, index) => {
+    const leaderboardPromises = pointsArray.map(async ({ user_id, horas, puntos, porcentaje }, index) => {
         try {
             const user = await client.users.fetch(user_id);
             let emoji = '';
@@ -33,10 +38,10 @@ export async function execute(interaction: CommandInteraction, client: Client) {
                     emoji = '🏅'; // Medal for other places
                     break;
             }
-            return `${emoji} **${index + 1}.** ${user.tag}: **${horas}** horas - **${puntos}** puntos`;
+            return `${emoji} **${index + 1}.** ${user.tag}: **${horas}** horas - **${puntos}** puntos - **${porcentaje || 0}%** Participación`;
         } catch (error) {
             console.error(`Error fetching user ${user_id}:`, error);
-            return `${index + 1}. Usuario desconocido: ${horas} horas - **${puntos}** puntos`;
+            return `${index + 1}. Usuario desconocido: ${horas} horas - **${puntos}** puntos - **${porcentaje || 0}%** Participación`;
         }
     });    
 

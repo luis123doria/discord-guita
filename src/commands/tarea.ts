@@ -12,13 +12,8 @@ export const data = new SlashCommandBuilder()
       .setRequired(true)
       .setMaxLength(50))
   .addStringOption(option =>
-    option.setName('deadline')
-      .setDescription('La fecha límite de la tarea (formato: DD-MM-YYYY)')
-      .setRequired(true)
-      .setMaxLength(10))
-  .addIntegerOption(option =>
     option.setName('horas')
-      .setDescription('Cantidad de horas estimadas para completar la tarea')
+      .setDescription('Cantidad de horas estimadas para completar la tarea (formato HH:MM)')
       .setRequired(true))
   .addStringOption(option =>
     option.setName('prioridad')
@@ -50,8 +45,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: CommandInteraction) {
   try {
   const taskName = interaction.options.get('name')?.value as string;
-  const deadline = interaction.options.get('deadline')?.value as string;
-  const horas = interaction.options.get('horas')?.value as number;
+  const horas = interaction.options.get('horas')?.value as string;
   const prioridad = interaction.options.get('prioridad')?.value as string;
   const user = interaction.user;
 
@@ -59,16 +53,23 @@ export async function execute(interaction: CommandInteraction) {
   if (!taskName || typeof taskName !== 'string') {
     throw new Error('El nombre de la tarea es inválido.');
   }
-  if (!deadline || typeof deadline !== 'string') {
-    throw new Error('La fecha límite es inválida.');
-  }
-  if (!horas || typeof horas !== 'number') {
-    throw new Error('Las horas estimadas son inválidas.');
+  if (!horas || typeof horas !== 'string' || !/^\d{2}:\d{2}$/.test(horas)) {
+    throw new Error('El formato de tiempo es inválido. Debe ser HH:MM.');
   }
   if (!prioridad || typeof prioridad !== 'string') {
     throw new Error('La prioridad es inválida.');
   }
-  
+
+  const [hours, minutes] = horas.split(':').map(Number);
+  const totalMilliseconds = (hours * 60 + minutes) * 60 * 1000;
+
+  // Calcular puntos
+  const priorityMultiplier = prioridad === 'HIGH' ? 70 : prioridad === 'MEDIUM' ? 20 : 10;
+  const puntos = Math.round((totalMilliseconds / 3600000) * priorityMultiplier);
+
+  console.log(`Total milliseconds: ${totalMilliseconds}`);
+  console.log(`Puntos calculados: ${puntos}`);
+
   const usersInvolved: { id: string; tag: string }[] = [];
   for (let i = 1; i <= 5; i++) {
     const userOption = interaction.options.getUser(`user${i}`);
@@ -77,9 +78,12 @@ export async function execute(interaction: CommandInteraction) {
     }
   }
 
+  const startTime = new Date(); // Hora de inicio
+  const endTime = new Date(startTime.getTime() + totalMilliseconds); // Hora de finalización
+  const reminderTime = new Date(endTime.getTime() - 30 * 60 * 1000); // 30 minutos antes de la finalización
+
   console.log({
     taskName,
-    deadline,
     horas,
     prioridad,
     usersInvolved
@@ -94,9 +98,10 @@ export async function execute(interaction: CommandInteraction) {
     .setTitle('📝 Nueva tarea creada')
     .addFields(
         { name: '✏️ Nombre', value: String(taskName), inline: true },
-        { name: '📅 Fecha Límite', value: String(deadline), inline: true },
-        { name: '⏳ Horas Estimadas', value: `${horas} horas`, inline: true },
+        // { name: '📅 Fecha Límite', value: String(deadline), inline: true },
+        { name: '⏳ Horas Estimadas', value: `${horas}`, inline: true },
         { name: '⚡ Prioridad', value: String(prioridad), inline: true },
+        { name: '🏆 Puntos', value: `${puntos}`, inline: true },
         { name: '👥 Asignada a:', value: usersInvolved.map(u => `• ${u.tag}`).join('\n'), inline: true },
         { name: '📌 Estado', value: 'Doing', inline: true } // Add status field with default value
       )
@@ -110,30 +115,33 @@ export async function execute(interaction: CommandInteraction) {
       name: `${taskName}`,
       autoArchiveDuration: 1440, // Auto-archive after 60 minutes of inactivity
       startMessage: message.id,
-      reason: 'New task thread created by bot command'
+      reason: 'Nuevo hilo para la tarea'
     });
 
     // Define taskRef here to make it accessible in the entire function
     const taskRef = db.collection('tasks').doc();
+
     console.log("Tarea creada en Firestore", taskRef.id);
     console.log({
       taskName,
-      deadline,
       horas,
       prioridad,
+      puntos,
       usersInvolved
     });
-    
+
     // Store task information in Firestore
     await taskRef.set({
       name: taskName,
-      deadline: deadline,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
       horas: horas,
       prioridad: prioridad,
+      puntos: puntos,
       createdBy: user.tag,
       assignedTo: usersInvolved,
       status: 'Doing',
-      threadId: thread.id,
+      threadId: thread?.id,
       createdAt: new Date()
     });
 
@@ -141,20 +149,29 @@ export async function execute(interaction: CommandInteraction) {
     await thread.send(`🗒️ **Tarea asignada a:** ${usersInvolved.map(u => `<@${u.id}>`).join(', ')}.\n**¡Buena suerte!**`);
 
     // Schedule a message to be sent 2 hour and 0 minutes before the deadline
-    const deadlineDate = new Date(deadline.split('-').reverse().join('-') + 'T00:00:00');
-    const reminderDate = new Date(deadlineDate.getTime() - (2 * 60 * 60 * 1000 + 0* 60 * 1000)); // 2 hour and 0 minutes before midnight
+    // const deadlineDate = new Date(deadline.split('-').reverse().join('-') + 'T00:00:00');
+    // const reminderDate = new Date(deadlineDate.getTime() - (2 * 60 * 60 * 1000 + 0* 60 * 1000)); // 2 hour and 0 minutes before midnight
 
-    schedule.scheduleJob(reminderDate, async () => {
-      await thread.send(`🚨 **Atención** ${usersInvolved.map(u => `<@${u.id}>`).join(', ')} 🚨\nLa fecha límite para la tarea **${taskName}** está a punto de completarse. **¡Dense prisa!**`);
-    });
+    // schedule.scheduleJob(reminderDate, async () => {
+    //   await thread.send(`🚨 **Atención** ${usersInvolved.map(u => `<@${u.id}>`).join(', ')} 🚨\nLa fecha límite para la tarea **${taskName}** está a punto de completarse. **¡Dense prisa!**`);
+    // });
 
-    // Schedule a message at the deadline
-    schedule.scheduleJob(deadlineDate, async () => {
+    // Programar recordatorio 30 minutos antes
+    schedule.scheduleJob(reminderTime, async () => {
       const taskSnapshot = await taskRef.get();
       const taskData = taskSnapshot.data();
-      if (!taskData) return;
+      if (!taskData || taskData.status !== 'Doing') return;
 
-      const deadlineMessage = await thread.send(`⏰ **Se ha acabado el tiempo para la tarea "${taskName}".**\nSi quieres añadir días extra, reacciona con un número del 1️⃣ al 9️⃣.\nSi no quieres extender la fecha límite, reacciona con ❌.`);
+      await thread?.send(`🚨 **Atención** ${usersInvolved.map(u => `<@${u.id}>`).join(', ')} 🚨\nLa tarea **${taskName}** expirará en 30 minutos.`);
+    });
+
+    // Programar mensaje de expiración de la tarea
+    schedule.scheduleJob(endTime, async () => {
+      const taskSnapshot = await taskRef.get();
+      const taskData = taskSnapshot.data();
+      if (!taskData || taskData.status !== 'Doing') return;
+
+      const deadlineMessage = await thread.send(`⏰ **Se ha acabado el tiempo para la tarea "${taskName}".**\nSi quieres añadir horas extra, reacciona con un número del 1️⃣ al 9️⃣.\nSi no quieres extender la fecha límite, reacciona con ❌.`);
       console.log(`Deadline message sent: ${deadlineMessage.id}`);
 
       // Add reactions to the message
@@ -180,7 +197,7 @@ export async function execute(interaction: CommandInteraction) {
         console.log(`Collected reaction: ${reaction.emoji.name} from user: ${user.tag}`);
         if (reaction.emoji.name === '❌') {
           collector.stop('no');
-          await thread.send(`❌ **La tarea no ha sido completada en la fecha límite y será eliminada.**\nSe descontarán **${taskData.puntos} puntos** a los usuarios asignados.`);
+          await thread.send(`❌ **La tarea no ha sido completada en el tiempo límite y será eliminada.**\nSe descontarán **${taskData.puntos} puntos** a los usuarios asignados.`);
           for (const user of usersInvolved) {
             const userRef = db.collection('horas_guita').doc(user.id);
             const userDoc = await userRef.get();
@@ -190,27 +207,37 @@ export async function execute(interaction: CommandInteraction) {
           // Eliminar la tarea de la base de datos
           await taskRef.delete();
         } else if (/^[1-9]️⃣$/.test(reaction.emoji.name!)) {
-          const extraDays = parseInt(reaction.emoji.name![0]);
+          // const extraDays = parseInt(reaction.emoji.name![0]);
           collector.stop('extended');
-          const newDeadline = new Date(deadlineDate.getTime() + extraDays * 24 * 60 * 60 * 1000);
-          const newDeadlineString = newDeadline.toISOString().split('T')[0].split('-').reverse().join('-');
+          
+          const extraHours = parseInt(reaction.emoji.name![0]);
+          const newEndTime = new Date(endTime.getTime() + extraHours * 60 * 60 * 1000);
           const newPuntos = Math.floor(taskData.puntos * 0.9); // Reduce puntos en un 10%
+          
+          // Calcular el tiempo total acumulado
+          const [initialHours, initialMinutes] = taskData.horas.split(':').map(Number);
+          const totalMinutes = initialHours * 60 + initialMinutes + extraHours * 60;
+          const totalHours = Math.floor(totalMinutes / 60);
+          const remainingMinutes = totalMinutes % 60;
+          const totalTimeFormatted = `${String(totalHours).padStart(2, '0')}:${String(remainingMinutes).padStart(2, '0')}`;
 
-          await taskRef.update({
-            deadline: newDeadlineString,
+          await taskRef.update({ 
+            endTime: newEndTime.toISOString(),
+            horas: totalTimeFormatted,
             puntos: newPuntos
           });
 
-          await thread.send(`✅ **La fecha límite ha sido extendida y los puntos por completarla han disminuido en un 10%.**\nNueva fecha límite: **${newDeadlineString}**.\nPuntos actualizados: **${newPuntos}**.`);
+          await thread.send(`✅ **El tiempo límite ha sido extendida y los puntos por completarla han disminuido en un 10%.**\nNueva tiempo límite: **${totalTimeFormatted}**.\nPuntos actualizados: **${newPuntos}**.`);
 
           // Crear un nuevo embed con la información actualizada
           const updatedEmbed = new EmbedBuilder()
           .setTitle('📝 Tarea Actualizada')
           .addFields(
             { name: '✏️ Nombre', value: taskData.name, inline: true },
-            { name: '📅 Nueva Fecha Límite', value: newDeadlineString, inline: true },
-            { name: '⏳ Horas Estimadas', value: `${horas} horas`, inline: true },
+            // { name: '📅 Nueva Fecha Límite', value: newDeadlineString, inline: true },
+            { name: '⏳ Horas Estimadas', value: `${totalTimeFormatted}`, inline: true },
             { name: '⚡ Prioridad', value: prioridad, inline: true },
+            { name: '🏆 Puntos', value: `${newPuntos}`, inline: true },
             { name: '👥 Asignada a:', value: usersInvolved.map(u => `• ${u.tag}`).join('\n'), inline: true },
             { name: '📌 Estado', value: 'Doing', inline: true }
           )

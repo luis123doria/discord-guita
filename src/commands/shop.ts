@@ -9,6 +9,19 @@ export const data = new SlashCommandBuilder()
   .setName('shop')
   .setDescription('Muestra la tienda y los items disponibles (10 seg. CD).');
 
+
+// IDs de los roles
+const roleIds = {
+  NE: '1364124171348742204',
+  E: '1364124414928752664',
+  SE: '1364124523795976222',
+  GL: '1364124630528294992',
+  SI: '1364249890875637820',
+  NO: '1364250038267543592',
+  SNO: '1364250113282674749',
+  SMNO: '1364250217645346927',
+};
+
 export async function execute(interaction: CommandInteraction, client: Client) {
   try {
     await interaction.reply({ content: 'Cargando ítems de la tienda...'});
@@ -164,6 +177,28 @@ export async function execute(interaction: CommandInteraction, client: Client) {
           await i.reply({ content: 'El ítem seleccionado ya no está disponible.', flags: MessageFlags.Ephemeral });
           return;
         }
+
+        // Verificar restricciones por roles
+      const member = await interaction.guild.members.fetch(i.user.id);
+      const userRoles = member.roles.cache;
+
+      if (userRoles.has(roleIds.NO) && selectedItem.codigo === 'GYM001') {
+        await i.reply({
+          content: '❌ No puedes comprar este ítem porque eres un **Mal Reportador**.',
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+
+      if (userRoles.has(roleIds.SNO) || userRoles.has(roleIds.SMNO)) {
+        const roleName = userRoles.has(roleIds.SNO) ? 'SNO' : 'SMNO';
+        await i.reply({
+          content: `❌ No puedes comprar ítems hijo de puta.`,
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+        // Continuar con la selección del ítem
           await i.reply({
             content: `Has seleccionado el ítem: **${selectedItem.premio}**\n**Costo:** ${selectedItem.costo} puntos\n**Requisitos:** ${selectedItem.requisitos} horas\n¿Deseas comprarlo?`,
             components: [
@@ -188,7 +223,7 @@ export async function execute(interaction: CommandInteraction, client: Client) {
             return;
           }
     
-          const { horas = 0, puntos = 0 } = userSnapshot.data();
+          const { horas = 0, puntos = 0, porcentaje = 0 } = userSnapshot.data();
     
           // Obtener los roles del usuario
           const member = await interaction.guild.members.fetch(i.user.id);
@@ -269,7 +304,22 @@ export async function execute(interaction: CommandInteraction, client: Client) {
               ? `Costo ajustado por los roles *${rolesAfectados.join(', ')}*`
               : 'No se aplicaron ajustes de roles.';
 
-            await i.reply({ content: `¡Has comprado el ítem **${selectedItem.premio}** con éxito!\nCosto ajustado: **${adjustedPrice} puntos**.\n${rolesMensaje}\nTe quedan **${puntosRestantes} puntos**.\n\n*(Espera 10 segundos antes de volver a usar el comando)*`});
+
+            // Si el ítem comprado es "AUM001", aumentar el porcentaje en un 5%
+            if (selectedItem.codigo === 'AUM001') {
+              const nuevoPorcentaje = Math.min(100, porcentaje + 5); // Asegurarse de que no supere el 100%
+              await userRef.update({ porcentaje: nuevoPorcentaje });
+
+              await i.reply({
+                content: `¡Has comprado el ítem **${selectedItem.premio}** con éxito!\nTu porcentaje ha aumentado en un **5%** y ahora es **${nuevoPorcentaje}%**.\nCosto ajustado: **${adjustedPrice} puntos**.\n${rolesMensaje}\nTe quedan **${puntosRestantes} puntos**.\n\n*(Espera 10 segundos antes de volver a usar el comando)*`,
+              });
+            } else {
+              await i.reply({
+                content: `¡Has comprado el ítem **${selectedItem.premio}** con éxito!\nCosto ajustado: **${adjustedPrice} puntos**.\n${rolesMensaje}\nTe quedan **${puntosRestantes} puntos**.\n\n*(Espera 10 segundos antes de volver a usar el comando)*`,
+              });
+            }
+
+           // await i.reply({ content: `¡Has comprado el ítem **${selectedItem.premio}** con éxito!\nCosto ajustado: **${adjustedPrice} puntos**.\n${rolesMensaje}\nTe quedan **${puntosRestantes} puntos**.\n\n*(Espera 10 segundos antes de volver a usar el comando)*`});
             
             // Actualizar la tienda (sin eliminar el ítem)
             await interaction.editReply({ embeds: [generateEmbed(currentPage)], components: generateComponents(currentPage) });}

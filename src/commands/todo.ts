@@ -32,11 +32,11 @@ export async function execute(interaction: CommandInteraction) {
       pageTasks.forEach((task, index) => {
         const assignedUsers = task.assignedTo.map(user => `<@${user.id}>`).join(', ') || 'Nadie';
         taskList += `**${start + index + 1}. ${task.name}**\n`;
-        taskList += `• **Fecha Límite:** ${task.deadline}\n`;
-        taskList += `• **Horas Estimadas:** ${task.horas} horas\n`; // Mostrar las horas estimadas
-        taskList += `• **Prioridad:** ${task.prioridad}\n`; // Mostrar la prioridad
-        taskList += `• **Asignada a:** ${assignedUsers}\n`;
-        taskList += `• **Estado:** ${task.status}\n\n`;
+        taskList += `⏳ **Horas Estimadas:** ${task.horas} horas\n`; // Mostrar las horas estimadas
+        taskList += `⚡ **Prioridad:** ${task.prioridad}\n`; // Mostrar la prioridad
+        taskList += `🏆 **Puntos:** ${task.puntos}\n`; // Mostrar los puntos
+        taskList += `👥 **Asignada a:** ${assignedUsers}\n`;
+        taskList += `📌 **Estado:** ${task.status}\n\n`;
       });
 
       return taskList;
@@ -86,7 +86,7 @@ export async function execute(interaction: CommandInteraction) {
 
     const collector = interaction.channel.createMessageComponentCollector({
       componentType: ComponentType.Button,
-      time: 10000,
+      time: 20000,
     });
 
     collector.on('collect', async (i) => {
@@ -146,7 +146,7 @@ export async function execute(interaction: CommandInteraction) {
             selectedTask.status = 'Finished';
 
             // Asignar puntos a los usuarios involucrados
-            const { assignedTo, horas, prioridad } = selectedTask;
+            const { assignedTo, puntos } = selectedTask;
           
             // Definir los ajustes de puntos según los roles
             const roleAdjustments = {
@@ -171,17 +171,7 @@ export async function execute(interaction: CommandInteraction) {
               SNO: '1364250113282674749',
               SMNO: '1364250217645346927',
             };
-
-            // Determinar el valor de prioridad_number según la prioridad
-            const prioridadValues = {
-              LOW: 10,
-              MEDIUM: 20,
-              HIGH: 70,
-            };
-            const prioridadNumber = prioridadValues[prioridad] || 10; // Valor predeterminado: LOW
-
-            // Calcular los puntos base
-            const basePoints = horas * prioridadNumber;
+            
             const mentions = assignedTo.map(user => `<@${user.id}>`).join(', '); // Generar menciones de los usuarios
 
             for (const user of assignedTo) {
@@ -206,7 +196,7 @@ export async function execute(interaction: CommandInteraction) {
                 }
               }
 
-              const adjustedPoints = Math.round(basePoints * (1 + totalAdjustment));
+              const adjustedPoints = Math.round(puntos * (1 + totalAdjustment));
 
               await userRef.update({ puntos: currentPoints + adjustedPoints });
 
@@ -215,7 +205,7 @@ export async function execute(interaction: CommandInteraction) {
               });
             }
 
-            await i.editReply({ content: `La tarea **${selectedTask.name}** ha sido marcada como finalizada y se han asignado **${puntos} puntos** a sus correspondientes usuarios.\n\n*(Espera 10 segundos antes de volver a usar este comando)*`});
+            await i.editReply({ content: `La tarea **${selectedTask.name}** ha sido marcada como finalizada y se han asignado **${puntos} puntos** a sus correspondientes usuarios.\n\n*(Espera 15 segundos antes de volver a usar este comando)*`});
           } else {
             await i.editReply({ content: 'Hubo un error al finalizar la tarea. Por favor, inténtalo de nuevo.' });
           }
@@ -244,7 +234,7 @@ export async function execute(interaction: CommandInteraction) {
             tasks.splice(tasks.findIndex(task => task.id === taskId), 1);
 
             await i.update({
-              content: `La tarea **${selectedTask.name}** ha sido eliminada correctamente.\n\n*(Espera 10 segundos antes de volver a usar este comando)*`,
+              content: `La tarea **${selectedTask.name}** ha sido eliminada correctamente.\n\n*(Espera 15 segundos antes de volver a usar este comando)*`,
               components: [],
             });
 

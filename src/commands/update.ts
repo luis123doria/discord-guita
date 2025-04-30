@@ -59,7 +59,7 @@ export async function execute(interaction: CommandInteraction, client: Client) {
         continue;
       }
 
-      const { horas, puntos, compras } = docSnapshot.data() || {};
+      const { horas, puntos, compras, globalNE, globalE, globalSE, globalGL } = docSnapshot.data() || {};
 
       if (!Array.isArray(compras) || compras.length === 0 || horas === undefined || puntos === undefined) {
         console.warn(`El documento con ID ${id} no contiene los campos "horas" o "puntos".`);
@@ -76,6 +76,10 @@ export async function execute(interaction: CommandInteraction, client: Client) {
 
       // Escribir los valores en las columnas A y B, comenzando desde la fila 2
       await updateSheetData(targetSheet, 'A2:B2' + (values.length + 1), valuesC);
+      
+      // Escribir los valores de globalNE, globalE, globalSE, globalGL en las celdas G2:I2
+      const globalValues = [[globalNE || 0, globalE || 0, globalSE || 0, globalGL || 0]];
+      await updateSheetData(targetSheet, 'G2:J2', globalValues);
       
       console.log(`Datos de la colección ${targetSheet} actualizados en Google Sheets.`);
     }
