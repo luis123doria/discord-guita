@@ -115,7 +115,7 @@ export async function execute(interaction: CommandInteraction, client: Client) {
         console.log(`Reacciones positivas: ${positiveReactions}, Reacciones negativas: ${negativeReactions}`);
         
         collector.on('end', async () => {
-            if (positiveReactions >= 1 && negativeReactions === 0) {
+            if (positiveReactions >= 3 && negativeReactions === 0) {
                 // Proceder con la acción
                 // Initialize user points if not already set
                 const userRef = db.collection('horas_guita').doc(userId);
