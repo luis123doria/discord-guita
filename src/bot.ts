@@ -36,6 +36,23 @@ client.once("ready", () => {
         }
     });
 
+    // Programar un mensaje cada hora
+    cron.schedule('0 * * * *', async () => {
+        try {
+            const channelId = '1363914957359546540'; // Reemplaza con el ID del canal donde quieres enviar el mensaje
+            const channel = client.channels.cache.get(channelId) as TextChannel;
+
+            if (channel) {
+                await channel.send('⏰ @everyone\n¡Recuerda hacer tu reporte! Cada hora cuenta. 🕒');
+                console.log('Mensaje enviado cada hora.');
+            } else {
+                console.error(`No se pudo encontrar el canal con ID: ${channelId}`);
+            }
+        } catch (error) {
+            console.error('Error al enviar el mensaje cada hora:', error);
+        }
+    });
+
     // Programar la verificación de "carga" a las 12 AM
     cron.schedule('0 0 * * *', async () => {
         try {
