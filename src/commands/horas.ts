@@ -79,7 +79,7 @@ export async function execute(interaction: CommandInteraction, client: Client) {
 
         // Enviar mensaje de confirmación
         const confirmationMessage = await interaction.reply({
-            content: `@here, ¿están de acuerdo en que <@${interaction.user.id}> hizo **${horas} horas de guita**? Reacciona con ✅ para aprobar o ❌ para rechazar.\n*(Tienes 5 minutos para reaccionar)*`,
+            content: `@here, ¿están de acuerdo en que <@${userId}> hizo **${horas} horas de guita**? Reacciona con ✅ para aprobar o ❌ para rechazar.\n*(Tienes 5 minutos para reaccionar)*`,
             fetchReply: true,
         });
 
@@ -104,17 +104,30 @@ export async function execute(interaction: CommandInteraction, client: Client) {
         let positiveReactions = 0;
         let negativeReactions = 0;
 
-        collector.on('collect', (reaction) => {
-        if (reaction.emoji.name === '✅') {
-            positiveReactions++;
-        } else if (reaction.emoji.name === '❌') {
-            negativeReactions++;
-        }
+        collector.on('collect', (reaction, user) => {
+            if (reaction.emoji.name === '✅') {
+                positiveReactions++;
+            } else if (reaction.emoji.name === '❌') {
+                negativeReactions++;
+            }
+            console.log(`Reacción añadida: ${reaction.emoji.name} por ${user.tag}`);
+            console.log(`Reacciones positivas: ${positiveReactions}, Reacciones negativas: ${negativeReactions}`);
         });
 
-        console.log(`Reacciones positivas: ${positiveReactions}, Reacciones negativas: ${negativeReactions}`);
-        
+        client.on('messageReactionRemove', (reaction, user) => {
+            if (reaction.message.id !== confirmationMessage.id) return;
+
+            if (reaction.emoji.name === '✅') {
+                positiveReactions = Math.max(0, positiveReactions - 1);
+            } else if (reaction.emoji.name === '❌') {
+                negativeReactions = Math.max(0, negativeReactions - 1);
+            }
+            console.log(`Reacción eliminada: ${reaction.emoji.name} por ${user.tag}`);
+            console.log(`Reacciones positivas: ${positiveReactions}, Reacciones negativas: ${negativeReactions}`);
+        });
+
         collector.on('end', async () => {
+            console.log(`Reacciones finales: ✅ ${positiveReactions}, ❌ ${negativeReactions}`);
             if (positiveReactions >= 3 && negativeReactions === 0) {
                 // Proceder con la acción
                 // Initialize user points if not already set

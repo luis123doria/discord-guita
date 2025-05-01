@@ -171,7 +171,7 @@ export async function execute(interaction: CommandInteraction) {
       const taskData = taskSnapshot.data();
       if (!taskData || taskData.status !== 'Doing') return;
 
-      const deadlineMessage = await thread.send(`⏰ **Se ha acabado el tiempo para la tarea "${taskName}".**\nSi quieres añadir horas extra, reacciona con un número del 1️⃣ al 9️⃣.\nSi no quieres extender la fecha límite, reacciona con ❌.`);
+      const deadlineMessage = await thread.send(`🚨 **Atención** ${usersInvolved.map(u => `<@${u.id}>`).join(', ')} 🚨\n⏰ **Se ha acabado el tiempo para la tarea "${taskName}".**\nSi quieres añadir horas extra, reacciona con un número del 1️⃣ al 9️⃣.\nSi no quieres extender la fecha límite, reacciona con ❌.`);
       console.log(`Deadline message sent: ${deadlineMessage.id}`);
 
       // Add reactions to the message
@@ -190,7 +190,7 @@ export async function execute(interaction: CommandInteraction) {
 
       const collector = deadlineMessage.createReactionCollector({ 
         filter, 
-        time: 60000 // 1 minuto para reaccionar
+        time: 300000 // 5 minutos para reaccionar
       }); 
 
       collector.on('collect', async (reaction, user) => {

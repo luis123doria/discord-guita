@@ -27,6 +27,7 @@
     "firebase": "^11.2.0",
     "firebase-admin": "^13.2.0",
     "googleapis": "^148.0.0",
+    "moment-timezone": "^0.5.48",
     "node-cron": "^3.0.3",
     "node-schedule": "^2.1.1",
     "nodemon": "^3.1.9"

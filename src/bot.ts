@@ -6,6 +6,7 @@ import { execute as executeCreateItem } from './commands/createItem';
 import * as commandModules from "./commands";
 import { db } from './firebase';
 import cron from 'node-cron'; // Importar la biblioteca cron
+import moment from 'moment-timezone'; // Importar moment-timezone para manejar zonas horarias
 
 const commands = Object(commandModules);
 
@@ -29,28 +30,35 @@ client.once("ready", () => {
         const channel = client.channels.cache.get(channelId) as TextChannel;
 
         if (channel) {
-            await channel.send('🚨 ¡Recuerda enviar tu reporte diario! 🚨');
+            await channel.send('@here\n🚨 ¡Recuerda enviar tu reporte diario! 🚨');
             console.log('Mensaje diario enviado a las 10 PM.');
         } else {
             console.error(`No se pudo encontrar el canal con ID: ${channelId}`);
         }
+    }, {
+        timezone: "America/Caracas" // Configurar la zona horaria a GMT-4
     });
 
     // Programar un mensaje cada hora
     cron.schedule('0 * * * *', async () => {
-        try {
+        const currentHour = moment().tz("America/Caracas").hour(); // Obtener la hora actual en GMT-4
+
+        // Verificar si la hora está entre las 7 AM (7) y las 9 PM (21)
+        if (currentHour >= 7 && currentHour <= 21) {
             const channelId = '1363914957359546540'; // Reemplaza con el ID del canal donde quieres enviar el mensaje
             const channel = client.channels.cache.get(channelId) as TextChannel;
 
             if (channel) {
-                await channel.send('⏰ @everyone\n¡Recuerda hacer tu reporte! Cada hora cuenta. 🕒');
-                console.log('Mensaje enviado cada hora.');
+                await channel.send('⏰ @here\n¡Recuerda hacer tu informe por el canal! Cada hora cuenta. 🕒');
+                console.log(`Mensaje enviado a las ${currentHour}:00 (GMT-4).`);
             } else {
                 console.error(`No se pudo encontrar el canal con ID: ${channelId}`);
             }
-        } catch (error) {
-            console.error('Error al enviar el mensaje cada hora:', error);
+        } else {
+            console.log(`No se envió mensaje porque la hora actual (${currentHour}:00) está fuera del rango permitido (7 AM - 9 PM, GMT-4).`);
         }
+    }, {
+        timezone: "America/Caracas" // Configurar la zona horaria a GMT-4
     });
 
     // Programar la verificación de "carga" a las 12 AM
@@ -117,6 +125,8 @@ client.once("ready", () => {
         } catch (error) {
             console.error('Error al verificar y actualizar los valores de carga:', error);
         }
+    }, {
+        timezone: "America/Caracas" // Configurar la zona horaria a GMT-4
     });
 
 
@@ -149,7 +159,10 @@ client.once("ready", () => {
         } catch (error) {
             console.error('Error al eliminar tareas con estado FINISHED:', error);
         }
+    }, {
+        timezone: "America/Caracas" // Configurar la zona horaria a GMT-4
     });
+
 });
 
 client.on('interactionCreate', async interaction => {

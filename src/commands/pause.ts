@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { CommandInteraction, ThreadChannel } from 'discord.js';
 import { db } from '../firebase';
+import moment from 'moment-timezone'; // Importar moment-timezone para manejar zonas horarias
 
 export const data = new SlashCommandBuilder()
   .setName('pause')
@@ -33,13 +34,12 @@ export async function execute(interaction: CommandInteraction) {
 
     // Verificar el estado actual de la tarea
     const currentStatus = taskData.status;
-    const currentEndTime = new Date(taskData.endTime);
-    const currentStartTime = new Date(taskData.startTime);
-    const currentTimeRemaining = taskData.timeRemaining ?? (currentEndTime.getTime() - Date.now());
-
+    const currentEndTime = moment.tz(taskData.endTime, "America/Caracas"); // Ajustar a GMT-4
+    const currentTimeRemaining = taskData.timeRemaining ?? currentEndTime.diff(moment.tz("America/Caracas"));
+    
     if (currentStatus === 'Doing') {
       // Pausar la tarea
-      const timeRemaining = Math.max(0, currentEndTime.getTime() - Date.now());
+      const timeRemaining = Math.max(0, currentEndTime.diff(moment.tz("America/Caracas")));
       await taskDoc.ref.update({
         status: 'En Pausa',
         timeRemaining: timeRemaining, // Guardar el tiempo restante
@@ -50,7 +50,7 @@ export async function execute(interaction: CommandInteraction) {
       });
     } else if (currentStatus === 'En Pausa') {
       // Reanudar la tarea
-      const newEndTime = new Date(Date.now() + currentTimeRemaining);
+      const newEndTime = moment.tz("America/Caracas").add(currentTimeRemaining, 'milliseconds'); // Calcular nueva hora de finalización
       await taskDoc.ref.update({
         status: 'Doing',
         endTime: newEndTime.toISOString(), // Actualizar la nueva hora de finalización
@@ -58,7 +58,7 @@ export async function execute(interaction: CommandInteraction) {
       });
 
       await interaction.reply({
-        content: `▶️ La tarea **${taskData.name}** ha sido reanudada. Nueva hora de finalización: **${newEndTime.toLocaleTimeString()}**.`,
+        content: `▶️ La tarea **${taskData.name}** ha sido reanudada. Nueva hora de finalización: **${newEndTime.format('HH:mm')}**.`,
       });
     } else {
       return interaction.reply({
