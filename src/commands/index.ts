@@ -10,3 +10,5 @@ export * as fetch from "./fetch";
 export * as update from "./update";
 export * as reporte from "./reporte";
 export * as pause from "./pause";
+export * as finish from "./finish";
+export * as gift from "./gift";

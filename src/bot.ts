@@ -131,12 +131,12 @@ client.once("ready", () => {
 
 
     // Programar la eliminación de tareas con estado FINISHED a las 12 AM
-    cron.schedule('0 0 * * *', async () => {
+    cron.schedule('0 */3 * * *', async () => {
         try {
             const tasksSnapshot = await db.collection('tasks').where('status', '==', 'Finished').get();
 
             if (tasksSnapshot.empty) {
-                console.log('No hay tareas con estado FINISHED para eliminar.');
+                console.log('No hay tareas con estado Finished para eliminar.');
                 return;
             }
 

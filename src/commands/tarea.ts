@@ -2,6 +2,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { CommandInteraction, TextChannel, EmbedBuilder, MessageReaction, User } from 'discord.js';
 import { db } from '../firebase';
 import schedule from 'node-schedule';
+import moment from 'moment-timezone';
 
 export const data = new SlashCommandBuilder()
   .setName('tarea')
@@ -67,9 +68,6 @@ export async function execute(interaction: CommandInteraction) {
   const priorityMultiplier = prioridad === 'HIGH' ? 70 : prioridad === 'MEDIUM' ? 20 : 10;
   const puntos = Math.round((totalMilliseconds / 3600000) * priorityMultiplier);
 
-  console.log(`Total milliseconds: ${totalMilliseconds}`);
-  console.log(`Puntos calculados: ${puntos}`);
-
   const usersInvolved: { id: string; tag: string }[] = [];
   for (let i = 1; i <= 5; i++) {
     const userOption = interaction.options.getUser(`user${i}`);
@@ -78,16 +76,25 @@ export async function execute(interaction: CommandInteraction) {
     }
   }
 
-  const startTime = new Date(); // Hora de inicio
-  const endTime = new Date(startTime.getTime() + totalMilliseconds); // Hora de finalización
-  const reminderTime = new Date(endTime.getTime() - 30 * 60 * 1000); // 30 minutos antes de la finalización
+  // Calcular las fechas en UTC-4
+  const startTime = moment.tz("America/Caracas"); // Hora de inicio en UTC-4
+  const endTime = startTime.clone().add(totalMilliseconds, 'milliseconds'); // Hora de finalización en UTC-4
+  
+  // Calcular el recordatorio 30 minutos antes de la hora de finalización
+  const reminderTime = endTime.clone().subtract(30, 'minutes'); // 30 minutos antes de la finalización
 
-  console.log({
-    taskName,
-    horas,
-    prioridad,
-    usersInvolved
-  });
+  // Formatear la duración de la tarea en XXhYYm
+  const durationHours = Math.floor(totalMilliseconds / (60 * 60 * 1000));
+  const durationMinutes = Math.floor((totalMilliseconds % (60 * 60 * 1000)) / (60 * 1000));
+  const formattedDuration = `${String(durationHours).padStart(2, '0')}h${String(durationMinutes).padStart(2, '0')}m`;
+
+  // Formatear la hora de finalización en HH:MM (AM/PM)
+  const formattedEndTime = endTime.format('hh:mm A'); // Formato HH:MM AM/PM
+
+  console.log(`Recordatorio programado para: ${reminderTime.format('YYYY-MM-DD HH:mm:ss')}`);
+  console.log(`Hora de finalización: ${endTime.format('YYYY-MM-DD HH:mm:ss')}`);
+  console.log(`Hora de inicio: ${startTime.format('YYYY-MM-DD HH:mm:ss')}`);
+  console.log(`Duración de la tarea: ${formattedDuration}`);
 
   if (!interaction.channel || !(interaction.channel instanceof TextChannel)) {
     await interaction.reply({ content: 'Este comando solo se puede usar en canales.', ephemeral: true });
@@ -99,7 +106,8 @@ export async function execute(interaction: CommandInteraction) {
     .addFields(
         { name: '✏️ Nombre', value: String(taskName), inline: true },
         // { name: '📅 Fecha Límite', value: String(deadline), inline: true },
-        { name: '⏳ Horas Estimadas', value: `${horas}`, inline: true },
+        // { name: '⏳ Horas Estimadas', value: `${horas}`, inline: true },
+        { name: '⏳ Horas Estimadas', value: `${formattedDuration}\n${formattedEndTime}`, inline: true },
         { name: '⚡ Prioridad', value: String(prioridad), inline: true },
         { name: '🏆 Puntos', value: `${puntos}`, inline: true },
         { name: '👥 Asignada a:', value: usersInvolved.map(u => `• ${u.tag}`).join('\n'), inline: true },
@@ -125,6 +133,9 @@ export async function execute(interaction: CommandInteraction) {
     console.log({
       taskName,
       horas,
+      startTime,
+      endTime,
+      reminderTime,
       prioridad,
       puntos,
       usersInvolved
@@ -135,29 +146,21 @@ export async function execute(interaction: CommandInteraction) {
       name: taskName,
       startTime: startTime.toISOString(),
       endTime: endTime.toISOString(),
+      reminderTime: reminderTime.toISOString(),
       horas: horas,
       prioridad: prioridad,
       puntos: puntos,
       createdBy: user.tag,
       assignedTo: usersInvolved,
       status: 'Doing',
-      threadId: thread?.id,
-      createdAt: new Date()
+      threadId: thread?.id
     });
 
     // Send a message in the new thread mentioning all users involved
     await thread.send(`🗒️ **Tarea asignada a:** ${usersInvolved.map(u => `<@${u.id}>`).join(', ')}.\n**¡Buena suerte!**`);
-
-    // Schedule a message to be sent 2 hour and 0 minutes before the deadline
-    // const deadlineDate = new Date(deadline.split('-').reverse().join('-') + 'T00:00:00');
-    // const reminderDate = new Date(deadlineDate.getTime() - (2 * 60 * 60 * 1000 + 0* 60 * 1000)); // 2 hour and 0 minutes before midnight
-
-    // schedule.scheduleJob(reminderDate, async () => {
-    //   await thread.send(`🚨 **Atención** ${usersInvolved.map(u => `<@${u.id}>`).join(', ')} 🚨\nLa fecha límite para la tarea **${taskName}** está a punto de completarse. **¡Dense prisa!**`);
-    // });
-
+    
     // Programar recordatorio 30 minutos antes
-    schedule.scheduleJob(reminderTime, async () => {
+    schedule.scheduleJob(reminderTime.toDate(), async () => {
       const taskSnapshot = await taskRef.get();
       const taskData = taskSnapshot.data();
       if (!taskData || taskData.status !== 'Doing') return;
@@ -166,7 +169,7 @@ export async function execute(interaction: CommandInteraction) {
     });
 
     // Programar mensaje de expiración de la tarea
-    schedule.scheduleJob(endTime, async () => {
+    schedule.scheduleJob(endTime.toDate(), async () => {
       const taskSnapshot = await taskRef.get();
       const taskData = taskSnapshot.data();
       if (!taskData || taskData.status !== 'Doing') return;
@@ -211,7 +214,8 @@ export async function execute(interaction: CommandInteraction) {
           collector.stop('extended');
           
           const extraHours = parseInt(reaction.emoji.name![0]);
-          const newEndTime = new Date(endTime.getTime() + extraHours * 60 * 60 * 1000);
+          const currentEndTime = moment.tz(taskData.endTime, "America/Caracas"); // Ajustar a GMT-4
+          const newEndTime = currentEndTime.add(extraHours, 'hours'); // Sumar horas al tiempo de finalización actual
           const newPuntos = Math.floor(taskData.puntos * 0.9); // Reduce puntos en un 10%
           
           // Calcular el tiempo total acumulado
@@ -226,6 +230,9 @@ export async function execute(interaction: CommandInteraction) {
             horas: totalTimeFormatted,
             puntos: newPuntos
           });
+
+          // Reprogramar mensajes de advertencia y expiración
+          // scheduleWarningAndExpirationMessages(taskRef.id, newEndTime);
 
           await thread.send(`✅ **El tiempo límite ha sido extendida y los puntos por completarla han disminuido en un 10%.**\nNueva tiempo límite: **${totalTimeFormatted}**.\nPuntos actualizados: **${newPuntos}**.`);
 
