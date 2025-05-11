@@ -2,7 +2,6 @@ export * as ping from "./ping";
 export * as help from "./help";
 export * as horas from "./horas";
 export * as rank from "./rank";
-export * as comandos from "./comandos";
 export * as tarea from "./tarea";
 export * as todo from "./todo";
 export * as shop from "./shop";

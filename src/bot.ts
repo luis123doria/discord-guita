@@ -71,10 +71,23 @@ client.once("ready", () => {
                 return;
             }
 
+            const guild = client.guilds.cache.get('GUILD_ID'); // Reemplaza con el ID de tu servidor
+            if (!guild) {
+                console.error('No se pudo encontrar el servidor.');
+                return;
+            }
+            
+            const streakRoles = {
+                NE: '1364124171348742204',
+                E: '1364124414928752664',
+                SE: '1364124523795976222',
+                GL: '1364124630528294992'
+            };
+
             const batch = db.batch(); // Usar batch para actualizar múltiples documentos
             const updatedUsers: string[] = []; // Lista para almacenar los usuarios actualizados
 
-            usersSnapshot.forEach(doc => {
+            for (const doc of usersSnapshot.docs) {
                 const userData = doc.data();
                 const userId = doc.id;
 
@@ -89,6 +102,7 @@ client.once("ready", () => {
                         globalNoCount: (userData.globalNoCount ?? 0) + 1,
                         noCount: (userData.noCount ?? 0) + 1,
                         carga: 1, // Reiniciar carga a 1
+                        streak: 'NE', // Cambiar la racha activa a "NE"
                     };
 
                     console.log(`Actualizando valores para el usuario ${userId}:`, updatedData);
@@ -96,13 +110,23 @@ client.once("ready", () => {
                     // Agregar la actualización al batch
                     batch.update(doc.ref, updatedData);
 
+                    // Quitar el rol asociado a la racha del usuario
+                    const member = await guild.members.fetch(userId).catch(() => null);
+                    if (member) {
+                        const currentStreak = userData.streak;
+                        const roleId = streakRoles[currentStreak];
+                        if (roleId && member.roles.cache.has(roleId)) {
+                            await member.roles.remove(roleId);
+                            console.log(`Rol ${currentStreak} eliminado para el usuario ${userId}.`);
+                        }
+                    }
                     // Agregar el usuario a la lista de actualizados
                     updatedUsers.push(userId);
                 } else {
                     // Si la carga es 0, solo reiniciar el valor de carga a 1
                     batch.update(doc.ref, { carga: 1 });
                 }
-            });
+            }
 
             // Confirmar las actualizaciones en Firestore
             await batch.commit();

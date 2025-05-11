@@ -152,10 +152,10 @@ export async function execute(interaction: CommandInteraction, client: Client) {
 
                 // IDs de los roles correspondientes a las rachas
                 const roles = {
-                    NE: '1364124171348742204', // Reemplaza con el ID del rol NE
-                    E: '1364124414928752664',   // Reemplaza con el ID del rol E
-                    SE: '1364124523795976222', // Reemplaza con el ID del rol SE
-                    GL: '1364124630528294992'  // Reemplaza con el ID del rol GL
+                    NE: '1364124171348742204',
+                    E: '1364124414928752664',
+                    SE: '1364124523795976222',
+                    GL: '1364124630528294992'
                 } ;
 
                 // Añadir o restar horas según la acción
@@ -405,10 +405,6 @@ export async function execute(interaction: CommandInteraction, client: Client) {
                     streak: streak,
                     streakCount: streakCount
                 }, { merge: true });
-
-                // return interaction.followUp({
-                //     content: `✅ El comando fue aprobado. Se han ${action === 'add' ? 'añadido' : 'restado'} **${horas} horas** para <@${userId}>.\n${streakMessage}`,
-                //   });
                   
             } else if (negativeReactions >= 1) {
               // Rechazar la acción
