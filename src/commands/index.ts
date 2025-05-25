@@ -11,3 +11,5 @@ export * as reporte from "./reporte";
 export * as pause from "./pause";
 export * as finish from "./finish";
 export * as gift from "./gift";
+export * as miembros from "./miembros";
+export * as descripcion from "./descripcion";

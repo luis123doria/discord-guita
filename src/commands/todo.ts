@@ -52,6 +52,11 @@ export async function execute(interaction: CommandInteraction) {
           { name: '📌 Estado', value: task.status, inline: true },
           { name: '', value: '\u200B' } // Línea en blanco entre tareas
         );
+        
+        // Agregar la descripción solo si existe
+        if (task.descripcion && task.descripcion.trim() !== '') {
+          embed.addFields({ name: '📝 Descripción', value: task.descripcion, inline: false });
+        }
       });
 
       return embed;

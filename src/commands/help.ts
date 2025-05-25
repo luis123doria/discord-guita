@@ -12,6 +12,8 @@ export const data = new SlashCommandBuilder()
                 { name: '/tarea', description: 'Crea una nueva tarea con fecha límite.' },
                 { name: '/todo', description: 'Muestra una lista con todas las tareas.' },
                 { name: '/pause', description: 'Pausa o reanuda una tarea. (🧵)' },
+                { name: '/miembros', description: 'Gestiona los miembros de una tarea. (🧵)' },
+                { name: '/descripcion', description: 'Añade una descripción a una tarea. (🧵)' },
                 { name: '/finish', description: 'Marca como finalizada una tarea. (🧵)' },
             ],
             "Reportes": [
