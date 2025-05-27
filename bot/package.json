@@ -1,0 +1,41 @@
+{
+  "name": "guita-bot",
+  "module": "bot.ts",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "A discord bot for the Guita server",
+  "main": "bot.ts",
+  "scripts": {
+    "start": "bun run src/bot.ts",
+    "dev": "bun run src/bot.ts",
+    "build": "tsc",
+    "deploy:commands": "bun run src/deploy-commands.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@discordjs/builders": "^1.11.1",
+    "@discordjs/rest": "^2.5.0",
+    "@libsql/client": "^0.14.0",
+    "@types/node-schedule": "^2.1.7",
+    "concurrently": "^9.1.2",
+    "discord.js": "^14.19.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "firebase": "^11.2.0",
+    "firebase-admin": "^13.2.0",
+    "googleapis": "^148.0.0",
+    "moment-timezone": "^0.5.48",
+    "node-cron": "^3.0.3",
+    "node-schedule": "^2.1.1",
+    "nodemon": "^3.1.9"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node-schedule": "^2.1.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

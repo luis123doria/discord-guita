@@ -1,0 +1,15 @@
+export * as ping from "./ping";
+export * as help from "./help";
+export * as horas from "./horas";
+export * as rank from "./rank";
+export * as tarea from "./tarea";
+export * as todo from "./todo";
+export * as shop from "./shop";
+export * as fetch from "./fetch";
+export * as update from "./update";
+export * as reporte from "./reporte";
+export * as pause from "./pause";
+export * as finish from "./finish";
+export * as gift from "./gift";
+export * as miembros from "./miembros";
+export * as descripcion from "./descripcion";
