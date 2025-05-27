@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { Client, GatewayIntentBits, TextChannel } from "discord.js";
 import config from "./config";
 import { handleMessage } from './commands/messageListener';
@@ -212,4 +213,5 @@ client.on('interactionCreate', async interaction => {
      
 });
 
-client.login(config.DISCORD_BOT_TOKEN);
+client.login(process.env.DISCORD_BOT_TOKEN || config.DISCORD_BOT_TOKEN);
+// client.login(config.DISCORD_BOT_TOKEN);
